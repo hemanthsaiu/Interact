@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stories</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 20px;
+            text-align: center;
+            overflow-x: hidden;
+        }
+
+        .table-border {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto; /* Center the border */
+        }
+
+        .tables-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 20px; /* Add padding for better spacing inside the border */
+            box-sizing: border-box;
+            word-wrap: break-word;
+        }
+
+        .table-container {
+            margin-right: 20px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: #fff;
+            word-wrap: break-word;
+            width:200px;
+        }
+
+        td {
+            position: relative;
+        }
+
+        .editable-field {
+            width: calc(100% - 22px);
+            border: 1px solid #4CAF50;
+            border-radius: 5px;
+            padding: 5px;
+            outline: none;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .edit-btn {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #4CAF50;
+            font-size: 16px;
+        }
+
+        .train-btn {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .train-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .table-title {
+            background-color: #2ecc71;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 8px 8px 0 0;
+        }
+        .myTextarea {
+           height: 200px;
+           width:500px;
+        
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Stylish Editable JSON Tables</h2>
+
+    <div class="table-border">
+        <div class="tables-container" id="tables-container"></div>
+    </div>
+
+    <button class="train-btn" onclick="trainModels()">Train</button>
+
+    <script>
+    
+        function jsonToEditableTable(key, value) {
+    
+        var tableHtml = `<div class="table-container">
+            
+                            <table>
+                                <tr>`;
+    
+        // Create table header
+        tableHtml += `<th>${key}</th>`;
+        tableHtml += `</tr>`;
+        
+        // Create table row with editable textarea
+        tableHtml += `<tr>`;
+        tableHtml += `<td>
+                        <textarea class="editable-field myTextarea">${value}</textarea>
+                        <span class="edit-btn" onclick="editField(this)">✎</span>
+                      </td>`;
+        tableHtml += `</tr>
+                    </table>
+                </div>`;
+    
+        return tableHtml;
+    }
+     
+     function sendMessageAndBackend() {
+        
+             var xhr = new XMLHttpRequest();
+             xhr.open("get", "http://127.0.0.1:2500/get_data", true);
+             xhr.setRequestHeader("Content-Type", "html/json");
+     
+             xhr.onreadystatechange = function () {
+                 if (xhr.readyState === 4) {
+                     if (xhr.status === 200) {
+                         console.log('File uploaded successfully to pdf_data endpoint');
+                         // Save the response locally
+                         var DataResponse = JSON.parse(xhr.responseText);
+                         console.log(xhr.responseText)
+                         
+                         console.log(typeof DataResponse)
+                         console.log()
+                         var tablesContainer = document.getElementById("tables-container");
+                         for (var key in DataResponse) {
+                             
+                             var tableDiv = document.createElement("div");
+                             tableDiv.innerHTML = jsonToEditableTable(key, DataResponse[key]);
+                             tablesContainer.appendChild(tableDiv);
+                         }
+                     } else {
+                         console.error('Error uploading file to pdf_data endpoint. Status:', xhr.status);
+                         console.error('Response:', xhr.responseText);
+                     }
+                 }
+             };
+     
+             xhr.send();
+         } 
+         
+        
+        sendMessageAndBackend()
+   
+        var Jdata = {"Computer and Health  Author Prof. Hayk S. Arakelyan. Full Professor in Medicine, Doctor of Medical Sciences, Ph.D , Grand Ph.D . Senior Expert of Interactive Clinical Pharmacology , Drug Safety, Treatment Tactics, General Medicine and Clinical Research.  ": "", "Indroduction. ": "Contemporary technology revolution has made our lives with so much convenient that people would hardly imagine life without computer, internet, cable TV, cellular phones, various tools and gadgets. Computers are one of the main tools in businesses, educational institutes, offices, homes and even in cars. On one hand, these technologies including computers have made lives so much easy but on the other hand have created many risks for human health! Noli Nocere !!!!  ", "Health Problems Associated With Technology Use.": "  -Headache. Because of increased muscle tension or pain in the neck at the base of the skull, headache is common problem with computer use. Many a times, prolonged use can affect eye power which needs vision correction. This can also result in headache. - Vision problems. Bright light and bad glare or flickering image can strain  eyes. Constantly focusing on the screen without blinking can cause dry eyes. Computer vision syndrome is another problem that you may suffer from.  - Musculoskeletal problems. Muscle soreness and muscle fatigue are the most common complaints of regular computer users. Back pain, chest pain, pain or numbness in arms, shoulder and feet top the list. These types of problems mainly occur because your posture while using the computer is not correct. Either you are sitting on an uncomfortable chair or your workstation is not supportive of correct posture. -", " Carpal Tunnel Syndrome.": "The medical problem associated with computer-related work is carpal tunnel syndrome (CTS). CTS is a stress-related injury caused by repetitive movement of joints, especially the wrist, and can lead to numerous musculoskeletal problems. - Obesity. Prolonged use of computers, especially in children, is the major contributing factor of sedentary lifestyle and childhood obesity.", "- Mental problems": ".   Children who spend too long on the internet face have various social problems such as loneliness, depression and anxiety etc. Excessive use of electronic screen media can have ill effects on mental health related to mood, cognition, and behavior and may even result in psychosis in the form of hallucination.  ", "-Electronic Screen Syndrome(ESS).": "  Together these factors can greatly exacerbate the difficulties and symptoms of other per-existing learning disabilities, and have recently been categorized as a new disorder under the banner of Electronic Screen Syndrome or ESS. Being a rather new disorder, diagnoses and definitions for ESS and its symptoms are still an ongoing work in progress. However, the following is a list of some general characterizations of that may help you identify this syndrome as a potential candidate for your child\\u2019s learning difficulties.               -Typical signs/symptoms mimic chronic stress and include irritable, depressed or labile mood, excessive tantrums, low frustration tolerance, poor self-regulation, disorganized behavior, oppositional-defiant behaviors, poor sportsmanship, social immaturity, poor eye contact, insomnia etc. ", "Electromagnetic fields and Human health. ": " Electromagnetic fields (EMFs) are invisible lines of force that occur whenever electricity is being conducted. The two types of electromagnetic fields are ionizing and nonionizing radiation. Ionizing radiation has enough energy to remove electrons from atoms. The loss of an electron with its negative charge causes the atom (or molecule) to become positively charged. Non-ionizing radiation is a series of energy waves composed of oscillating electric and magnetic fields traveling at the speed of light. Nonionizing radiation is found in a wide range of occupational settings and can pose a health risk to exposed workers if not properly controlled.                                                                                        -Computers are also one of the sources of electromagnetic field. Ray of oscillating electrons hit the bright surface of a computer screen, it produces a radiant image along with emitting radiations in the environment. These electrons hitting the computer screen also produce pulse electromagnetic radiation (PEMR) which continues for a number of hours even after the turning off the computer and negatively affect living cells. ", "-Computer and Children Health. -Computer and Cardiovascular Diseases. -Computer and Mental Disorders. -Computer Addiction. ": "", "To be continued .... ": "If you have any questions concerning \\u2019Computer and Health\\u2019, interactive clinical pharmacology , or any other questions,please inform  me.                                  "}
+    
+        
+        
+        function editField(editBtn) {
+            var td = editBtn.parentNode;
+            var input = td.querySelector('.editable-field');
+            input.readOnly = !input.readOnly;
+        }
+
+        function trainModels() {
+            alert('Models trained successfully!');
+        }
+    </script>
+
+</body>
+</html>

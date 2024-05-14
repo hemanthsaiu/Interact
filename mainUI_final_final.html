@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: row;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #chat-navigation {
+            width: 200px;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #add-chat-button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-top: 10px;
+            /* Adjust spacing */
+        }
+
+        #chat-windows-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            flex-grow: 1;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            display: none;
+            width: 100%;
+            margin-top: 35px;
+            /* Set width to 100% */
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: scroll;
+            max-height: calc(100vh - 160px);
+            /* Adjust as needed */
+        }
+
+        .user-input {
+            display: flex;
+            flex-direction: row;
+            /* Adjusted to row */
+            padding: 10px;
+            border-top: 1px solid #ccc;
+            margin-top: 10px;
+            /* Adjust spacing */
+        }
+
+        .message-input {
+            flex-grow: 1;
+            padding: 8px;
+            margin-right: 10px;
+            /* Adjust spacing */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .send-button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #chat-list li {
+            cursor: pointer;
+            margin-bottom: 5px;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        #chat-list li:hover {
+            background-color: #ddd;
+        }
+
+        .active-chat {
+            background-color: #ddd;
+        }
+
+        .sent-message {
+            align-self: flex-end;
+            background-color: #4CAF50;
+            color: #fff;
+            margin-left: auto;
+            margin-right: 5%;
+            border-radius: 5px;
+            padding: 8px;
+            max-width: 40%;
+            margin-bottom: 10px;
+        }
+
+        .typing-animation {
+            animation: typing 1s infinite;
+            /* Adjust the duration as needed */
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
+        .received-message {
+            align-self: flex-start;
+            background-color: #ddd;
+            color: #000;
+            margin-right: auto;
+            margin-left: 5%;
+            border-radius: 5px;
+            padding: 8px;
+            max-width: 40%;
+			word-wrap: break-word;
+			white-space: pre-line;
+        }
+
+        .message-container {
+            margin-bottom: 10px;
+            /* Add spacing between messages */
+        }
+
+        #go-data-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            border: 1px solid #4CAF50;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        @keyframes typing {
+            0% {
+                content: "";
+            }
+
+            50% {
+                content: "...";
+            }
+
+            100% {
+                content: "";
+            }
+        }
+    </style>
+    <title>Your Stylish Chat</title>
+</head>
+
+<body>
+
+    <button id="go-data-button" onclick="passAndLoad()">Go data</button>
+
+    <div id="chat-container">
+        <div id="chat-navigation">
+            <h2>Chat Windows</h2>
+            <ul id="chat-list">
+            </ul>
+            <button id="add-chat-button" onclick="addChatWindow()">Add Chat Window</button>
+        </div>
+
+        <div id="chat-windows-container">
+        </div>
+    </div>
+
+    <div class="user-input">
+        <input type="text" class="message-input" placeholder="Type your message..." onkeyup="handleEnterKey(event)">
+        <input type="file" id="fileInput" style="margin-right: 10px;">
+        <button class="send-button" onclick="sendMessagesAndBackend()">Send</button>
+    </div>
+
+    <script>
+        var chatWindowCount = 0;
+        var chatMessages = {};
+        var activeChatId = null;
+        var pdfDataResponse = null;  // Variable to store the PDF data response
+
+        function passAndLoad() {
+            if (pdfDataResponse) {
+                // Convert the PDF data response to JSON string
+                var jsonString = JSON.stringify(pdfDataResponse);
+
+                // Encode the JSON string to include in the URL
+                var encodedData = encodeURIComponent(jsonString);
+
+                // Use the saved response in passAndLoad function
+                console.log('Passing saved PDF data to passAndLoad:', jsonString);
+
+                // Open a new window with the second HTML page and pass the encoded JSON in the URL
+                window.open('GoButton.html?data=' + encodedData, '_blank');
+            } else {
+                console.log('No saved PDF data response available');
+            }
+        }
+
+
+        function addChatWindow() {
+            chatWindowCount++;
+
+            var newChatContainer = document.createElement("div");
+            newChatContainer.className = "chat-container";
+            newChatContainer.id = "chat-container-" + chatWindowCount;
+
+            var newChatMessages = document.createElement("div");
+            newChatMessages.className = "chat-messages";
+            newChatMessages.id = "chat-messages-" + chatWindowCount;
+
+            newChatContainer.appendChild(newChatMessages);
+
+            document.getElementById("chat-windows-container").appendChild(newChatContainer);
+
+            // Initialize messages for the new chat window
+            chatMessages[chatWindowCount] = [];
+
+            updateChatList();
+            attachEventListeners(chatWindowCount);
+
+        }
+
+        function attachEventListeners(chatId) {
+            // No need to attach event listeners for input and button as they are now outside the chat window
+        }
+
+        function updateChatList() {
+            var chatList = document.getElementById("chat-list");
+            chatList.innerHTML = "";
+
+            for (var i = 1; i <= chatWindowCount; i++) {
+                var listItem = document.createElement("li");
+                listItem.textContent = "Chat Window " + i;
+                listItem.onclick = function (chatId) {
+                    return function () {
+                        switchChatWindow(chatId);
+                    };
+                }(i);
+
+                chatList.appendChild(listItem);
+            }
+        }
+
+        function switchChatWindow(chatId) {
+            // Hide all chat windows
+            var chatContainers = document.querySelectorAll(".chat-container");
+            chatContainers.forEach(function (container) {
+                container.style.display = "none";
+            });
+
+            // Display the selected chat window
+            var chatContainer = document.getElementById("chat-container-" + chatId);
+            chatContainer.style.display = "flex";
+
+            // Remove the active class from all list items
+            var chatListItems = document.querySelectorAll("#chat-list li");
+            chatListItems.forEach(function (item) {
+                item.classList.remove("active-chat");
+            });
+
+            // Add the active class to the selected list item
+            var selectedListItem = document.querySelector(`#chat-list li:nth-child(${chatId})`);
+            selectedListItem.classList.add("active-chat");
+
+            // Set the active chat ID
+            activeChatId = chatId;
+
+            // Display messages for the selected chat window
+            displayMessages(chatId);
+        }
+
+      function receivedDisplayMessages(response) {
+		var chatMessagesDiv = document.querySelector(`#chat-messages-${activeChatId}`);
+
+		// Create a new message container
+		var messageContainer = document.createElement("div");
+		messageContainer.classList.add("message-container");
+
+		// Create a new message element with the received-message class
+		var newMessage = document.createElement("div");
+
+		if (typeof response === "string") {
+			newMessage.textContent = response;
+		} else if (response.hasOwnProperty("text")) {
+			newMessage.textContent = response.text;
+		} else {
+			console.error("Invalid response format:", response);
+			return;
+		}
+
+		newMessage.classList.add("received-message");
+		newMessage.style.whiteSpace = "pre-line";
+		messageContainer.appendChild(newMessage);
+		chatMessagesDiv.appendChild(messageContainer);
+
+		// Mark the message as received in the chatMessages object
+		chatMessages[activeChatId].push({ text: newMessage.textContent, received: true });
+
+		// Scroll to the bottom of the chat messages
+		chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+	}
+
+
+
+        function sendMessage(chatId) {
+            var messageInput = document.querySelector(".message-input");
+            var fileInput = document.getElementById("fileInput");
+            var messageText = messageInput.value.trim();
+
+            if (messageText !== "" || (fileInput.files.length > 0 && fileInput.files[0])) {
+                // Store the message for the current chat window
+                chatMessages[chatId].push({ text: messageText, file: fileInput.files[0] });
+
+                var chatMessagesDiv = document.querySelector(`#chat-messages-${chatId}`);
+
+                // Create a new message container
+                var messageContainer = document.createElement("div");
+                messageContainer.classList.add("message-container");
+
+                // Create a new message element with the sent-message class
+                var newMessage = document.createElement("div");
+
+                if (messageText !== "") {
+                    newMessage.textContent = messageText;
+                } else {
+                    // Display a link to the uploaded file
+                    var fileLink = document.createElement("a");
+                    fileLink.href = URL.createObjectURL(fileInput.files[0]);
+                    fileLink.target = "_blank";
+                    fileLink.textContent = "File: " + fileInput.files[0].name;
+                    newMessage.appendChild(fileLink);
+                }
+
+                newMessage.classList.add("sent-message");
+                messageContainer.appendChild(newMessage);
+
+                chatMessagesDiv.appendChild(messageContainer);
+
+                messageInput.value = "";
+                fileInput.value = "";
+
+                chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+
+            }
+
+            if (fileInput.files.length > 0 && fileInput.files[0]) {
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "https://132b-24-203-191-23.ngrok-free.app/pdf_data", true);
+                xhr.setRequestHeader("Content-Type", "multipart/form-data");
+
+                var formData = new FormData();
+                formData.append('pdfFile', fileInput.files[0]);
+
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            console.log('File uploaded successfully to pdf_data endpoint');
+                            // Save the response locally
+                            pdfDataResponse = xhr.responseText;
+                        } else {
+                            console.error('Error uploading file to pdf_data endpoint. Status:', xhr.status);
+                            console.error('Response:', xhr.responseText);
+                        }
+                    }
+                };
+
+                xhr.send(formData);
+            } else if (messageText !== "") {
+                var xhrText = new XMLHttpRequest();
+                xhrText.open("POST", "https://132b-24-203-191-23.ngrok-free.app/receive_data", true);
+                xhrText.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
+                var messageJSON = { text: messageText };
+                var jsonData = JSON.stringify(messageJSON);
+
+                xhrText.onreadystatechange = function () {
+                    if (xhrText.readyState === 4) {
+                        if (xhrText.status === 200) {
+                            console.log('Text message sent successfully to receive_data endpoint');
+                            pdfDataResponse = JSON.parse(xhrText.responseText)
+                            debugger
+                            receivedDisplayMessages(pdfDataResponse.text)
+                        } else {
+                            console.error('Error sending text message to receive_data endpoint. Status:', xhrText.status);
+                            console.error('Response:', xhrText.responseText);
+                        }
+                    }
+                };
+
+                xhrText.send(jsonData);
+            }
+
+
+        }
+
+        function displayMessages(chatId) {
+    // Display stored messages for the selected chat window
+    var chatMessagesDiv = document.querySelector(`#chat-messages-${chatId}`);
+    chatMessagesDiv.innerHTML = "";
+
+    chatMessages[chatId].forEach(function (messageObj) {
+        var newMessage = document.createElement("div");
+
+        // Access the 'text' property of the message object
+        newMessage.textContent = messageObj.text;
+
+        // Alternatively, you can check if it's a file object and handle it accordingly
+        if (messageObj.file) {
+            var fileLink = document.createElement("a");
+            fileLink.href = URL.createObjectURL(messageObj.file);
+            fileLink.target = "_blank";
+            fileLink.textContent = "File: " + messageObj.file.name;
+            newMessage.appendChild(fileLink);
+        }
+
+        // Check if the message was sent or received
+        if (messageObj.hasOwnProperty("received") && messageObj.received) {
+            newMessage.classList.add("received-message");
+        } else {
+            newMessage.classList.add("sent-message");
+        }
+
+        chatMessagesDiv.appendChild(newMessage);
+    });
+
+    // Scroll to the bottom of the chat messages
+    chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+}
+
+
+        function handleEnterKey(event) {
+
+            if (event.keyCode === 13) {
+
+                sendMessage(activeChatId);
+            }
+        }
+
+        function getMessagesJSON() {
+            var messagesJSON = {};
+
+            for (var chatId in chatMessages) {
+                messagesJSON[chatId] = chatMessages[chatId];
+            }
+
+            return messagesJSON;
+        }
+
+        function getAndLogMessagesJSON() {
+            var messagesJSON = getMessagesJSON();
+            console.log(messagesJSON);
+        }
+
+
+
+
+         function sendMessageAndBackend() {
+            var messageInput = document.querySelector(".message-input");
+            var fileInput = document.getElementById("fileInput");
+            var messageText = messageInput.value.trim();
+        
+            if (fileInput.files.length > 0 && fileInput.files[0]) {
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "https://132b-24-203-191-23.ngrok-free.app/pdf_data", true);
+                xhr.setRequestHeader("Content-Type", "multipart/form-data");
+        
+                var formData = new FormData();
+                formData.append('pdfFile', fileInput.files[0]);
+        
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            console.log('File uploaded successfully to pdf_data endpoint');
+                            // Save the response locally
+                            pdfDataResponse = xhr.responseText;
+                        } else {
+                            console.error('Error uploading file to pdf_data endpoint. Status:', xhr.status);
+                            console.error('Response:', xhr.responseText);
+                        }
+                    }
+                };
+        
+                xhr.send(formData);
+            } else if (messageText !== "") {
+                var xhrText = new XMLHttpRequest();
+                xhrText.open("POST", "https://132b-24-203-191-23.ngrok-free.app/receive_data", true);
+                xhrText.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        
+                var messageJSON = { text: messageText };
+                var jsonData = JSON.stringify(messageJSON);
+        
+                xhrText.onreadystatechange = function () {
+                    if (xhrText.readyState === 4) {
+                        if (xhrText.status === 200) {
+                            console.log('Text message sent successfully to receive_data endpoint');
+                            pdfDataResponse = JSON.parse(xhrText.responseText)
+                            receivedDisplayMessages(pdfDataResponse.text)
+                        } else {
+                            console.error('Error sending text message to receive_data endpoint. Status:', xhrText.status);
+                            console.error('Response:', xhrText.responseText);
+                        }
+                    }
+                };
+        
+                xhrText.send(jsonData);
+            }
+        
+            messageInput.value = "";
+            fileInput.value = "";
+        }
+
+
+        function sendMessagesAndBackend() {
+            debugger
+            // Call the existing sendMessage function
+            sendMessage(activeChatId);
+
+            // Call the new sendMessagesToBackend function
+            sendMessageAndBackend();
+        }
+
+        function generateReply(message) {
+            return "Let's go! " + message;
+        }
+    </script>
+
+</body>
+
+</html>
